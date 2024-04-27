@@ -57,7 +57,7 @@ bias = random.uniform(0.00000001, 1.0)
 class NeuronioEscondido:
 
     def __init__(self):
-        self.pesos = np.random.rand(120)
+        self.pesos = np.random.random(120)
 
     def printPesos(self):
         print(self.pesos)
@@ -76,19 +76,22 @@ class NeuronioEscondido:
 
 neuroniosEscondidos = [NeuronioEscondido() for _ in range(numeroNeuroniosEscondidos)]
 
-
+#neuronio da camada de saida
 class NeuronioSaida:
 
     valorSaida = float
 
     def __init__(self):
-        self.pesos = np.random.rand(numeroNeuroniosEscondidos)
+        self.pesos = np.random.random(numeroNeuroniosEscondidos)
 
     def somaPesos(self):
         somatorio = 0.0
         for i in range(0, numeroNeuroniosEscondidos - 1):
             somatorio += neuroniosEscondidos[i].ativacao() * self.pesos[i]
         return somatorio
+    
+    def ativacao(self):
+        return sigmoide(self.somaPesos() + bias)
 
 neuronioSaida = [NeuronioSaida() for _ in range(26)]
 
