@@ -1,5 +1,6 @@
 import numpy as np
 import random
+from sklearn.model_selection import train_test_split
 
 #importacao dos dados
 ####################################################################
@@ -22,6 +23,12 @@ amostraAux = np.fromstring(entradaProcessada, sep=',')
 
 #remodelando os dados que ficaram em 1 dimensao para uma matriz
 amostra = np.reshape(amostraAux, (1326, 120))
+
+amostra_treino, resto = train_test_split(amostra, train_size=0.7, random_state=42)
+
+amostra_validacao, amostra_teste = train_test_split(resto, test_size=0.5, random_state=42)
+
+print(len(amostra_treino))
 
 #print(amostra)
 
