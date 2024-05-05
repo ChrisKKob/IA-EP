@@ -28,9 +28,6 @@ amostra_treino, resto = train_test_split(amostra, train_size=0.7, random_state=4
 
 amostra_validacao, amostra_teste = train_test_split(resto, test_size=0.5, random_state=42)
 
-print(len(amostra_treino))
-
-#print(amostra)
 
 #carregamento dos dados do rotulo dos dados
 rotulo = np.loadtxt('Y_letra.txt',dtype=str)
@@ -59,7 +56,7 @@ numeroNeuroniosEscondidos = 5
 
 numeroAmostraAtual = 0
 
-taxaDeAprendizado = 0.4
+taxaDeAprendizado = 0.6
 
 #neuronios da camada escondida
 class NeuronioEscondido:
@@ -115,7 +112,7 @@ class NeuronioSaida:
         return somatorio
     
     def ativacao(self):
-        self.valorSaida = sigmoide(self.somaPesos() + biasSaida)
+        self.valorSaida = sigmoide(self.somaPesos() + self.bias)
 
     def salvarTermoErro(self, valorErro):
         self.termoErro = valorErro
@@ -144,10 +141,12 @@ mapeamentoRotulo = {'A': 0, 'B': 1, 'C': 2, 'D': 3, 'E': 4, 'F': 5, 'G': 6, 'H':
 ####################################################################
 
 numeroEpoca = 0
+limiteEpoca = 42
+acerto = 0
 
 while True:
     #condiçoes de parada
-    if(numeroEpoca >= 1):
+    if(numeroEpoca >= limiteEpoca):
         break
 
     #Feedforward
@@ -158,39 +157,51 @@ while True:
         neuroniosSaida[i].ativacao()
         #print(neuroniosSaida[i].valorSaida)
 
+    erro = False
+
+    for i in range(0, 26):
+        if(i == mapeamentoRotulo[rotulo[numeroAmostraAtual]]):
+            if(neuroniosSaida[i].valorSaida <= 1): erro = True
+        elif(neuroniosSaida[i].valorSaida >= 0): erro = True
 
     #Backpropagation
     #Calculando e salvando o termo de erro da camada de saida
-    for i in range(0, 26):
-        if(i == mapeamentoRotulo[rotulo[numeroAmostraAtual]]):
-            neuroniosSaida[i].salvarTermoErro(1 - neuroniosSaida[i].valorSaida * derivadaSigmoide(neuroniosSaida[i].valorSaida))
-        else: neuroniosSaida[i].salvarTermoErro(0 - neuroniosSaida[i].valorSaida * derivadaSigmoide(neuroniosSaida[i].valorSaida)) 
-
-
     somatorioTermoErroOculto = 0.0
-
-    #Calculo do termo de erro para os neuronios da camada oculta
-    for i in range(0, numeroNeuroniosEscondidos):
-        for j in range(0, 26):
-            somatorioTermoErroOculto += neuroniosSaida[j].termoErro * neuroniosSaida[j].pesos[i]
-        neuroniosEscondidos[i].salvarTermoErro(somatorioTermoErroOculto * derivadaSigmoide(neuroniosEscondidos[i].valorSaida))
+    if(erro):
+        for i in range(0, 26):
+            if(i == mapeamentoRotulo[rotulo[numeroAmostraAtual]]):
+                neuroniosSaida[i].salvarTermoErro(1 - neuroniosSaida[i].valorSaida * derivadaSigmoide(neuroniosSaida[i].valorSaida))
+            else: neuroniosSaida[i].salvarTermoErro(0 - neuroniosSaida[i].valorSaida * derivadaSigmoide(neuroniosSaida[i].valorSaida)) 
         
+    #Calculo do termo de erro para os neuronios da camada oculta        
+        for i in range(0, numeroNeuroniosEscondidos):
+            for j in range(0, 26):
+                somatorioTermoErroOculto += neuroniosSaida[j].termoErro * neuroniosSaida[j].pesos[i]
+            neuroniosEscondidos[i].salvarTermoErro(somatorioTermoErroOculto * derivadaSigmoide(neuroniosEscondidos[i].valorSaida))
+
+        if(numeroEpoca == 42): print(somatorioTermoErroOculto)
+
     #Atualizando pesos
-    for i in range(0, 26):
-        neuroniosSaida[i].atualizarPesos()
+        for i in range(0, 26):
+            neuroniosSaida[i].atualizarPesos()
 
-    for i in range(0, numeroNeuroniosEscondidos):
-        neuroniosEscondidos[i].atualizarPesos()
+        for i in range(0, numeroNeuroniosEscondidos):
+            neuroniosEscondidos[i].atualizarPesos()
+    else: acerto += 1
 
-
-
+    if(acerto == 928):
+        break
 
     #parametros do loop para passar nova amostra
     numeroAmostraAtual += 1
 
-    if(numeroAmostraAtual >= 1326):
+    print("Epoca "+ str(numeroEpoca + 1)+"/ numero de acertos:"+str(acerto)+"/ Numero amostra:" +str(numeroAmostraAtual))
+
+    if(numeroAmostraAtual >= len(amostra_treino)):
         numeroEpoca += 1
         numeroAmostraAtual = 0
+        acerto = 0
+        np.random.shuffle(amostra_treino)
 
 
 
