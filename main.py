@@ -39,7 +39,7 @@ rotulo = np.loadtxt('Y_letra.txt',dtype=str)
 
 ####################################################################
 #
-# variaveis definidas: amostra, rotulo
+# variaveis definidas: amostra_treino, amostra_validacao, amostra_teste, rotulo
 #
 
 
@@ -59,8 +59,6 @@ numeroNeuroniosEscondidos = 5
 
 numeroAmostraAtual = 0
 
-biasEscondido = random.uniform(0.000001, 1.0)
-
 taxaDeAprendizado = 0.4
 
 #neuronios da camada escondida
@@ -70,6 +68,7 @@ class NeuronioEscondido:
         self.pesos = np.random.random(120)
         self.valorSaida = 0.0
         self.termoErro = 0.0
+        self.bias = random.uniform(0.000001, 1.0)
 
     def printPesos(self):
         print(self.pesos)
@@ -78,12 +77,12 @@ class NeuronioEscondido:
     def somaPesos(self):
         somatorio = 0.0
         for i in range(0, 120):
-            somatorio += amostra[numeroAmostraAtual][i] * self.pesos[i]
+            somatorio += amostra_treino[numeroAmostraAtual][i] * self.pesos[i]
         return somatorio
     
     #retorna o resultado da funcao de ativacao
     def ativacao(self):
-        self.valorSaida = sigmoide(self.somaPesos() + biasEscondido)
+        self.valorSaida = sigmoide(self.somaPesos() + self.bias)
 
     def salvarTermoErro(self, valorErro):
         self.termoErro = valorErro
@@ -93,15 +92,12 @@ class NeuronioEscondido:
         for i in range(0, 120):
             deltaPeso = self.pesos[i] * taxaDeAprendizado * self.termoErro
             self.pesos[i] += deltaPeso
+        self.bias = self.bias + taxaDeAprendizado * self.termoErro
 
-        biasEscondido = biasEscondido + (taxaDeAprendizado * self.termoErro)
     
 
 
-
 neuroniosEscondidos = [NeuronioEscondido() for _ in range(numeroNeuroniosEscondidos)]
-
-biasSaida = random.uniform(0.000001, 1.0)
 
 #neuronio da camada de saida
 class NeuronioSaida:
@@ -110,6 +106,7 @@ class NeuronioSaida:
         self.pesos = np.random.random(numeroNeuroniosEscondidos)
         self.valorSaida = 0.0
         self.termoErro = 0.0
+        self.bias = random.uniform(0.000001, 1.0)
 
     def somaPesos(self):
         somatorio = 0.0
@@ -128,8 +125,8 @@ class NeuronioSaida:
         for i in range(0, numeroNeuroniosEscondidos):
             deltaPeso = self.pesos[i] * self.termoErro * taxaDeAprendizado
             self.pesos[i] += deltaPeso
+        self.bias = self.bias + self.termoErro * taxaDeAprendizado
 
-        biasSaida = biasSaida + (self.termoErro * taxaDeAprendizado)
 
 
 
@@ -178,6 +175,14 @@ while True:
             somatorioTermoErroOculto += neuroniosSaida[j].termoErro * neuroniosSaida[j].pesos[i]
         neuroniosEscondidos[i].salvarTermoErro(somatorioTermoErroOculto * derivadaSigmoide(neuroniosEscondidos[i].valorSaida))
         
+    #Atualizando pesos
+    for i in range(0, 26):
+        neuroniosSaida[i].atualizarPesos()
+
+    for i in range(0, numeroNeuroniosEscondidos):
+        neuroniosEscondidos[i].atualizarPesos()
+
+
 
 
     #parametros do loop para passar nova amostra
